@@ -153,4 +153,4 @@ for sub in subs:
     data.reset_index(drop=True, inplace=True)
 
     # Save processed data frame
-    data.to_csv('output_path/performance_alpha.csv', index=False)
+    data.to_csv('output_path/' + sub + '_performance_' + task + '.csv', index=False)
