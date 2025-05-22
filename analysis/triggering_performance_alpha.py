@@ -10,7 +10,6 @@ matplotlib.use('Qt5Agg')
 
 # Set path and other variables
 path = 'path to processed data' 
-columns = ['samples', 'events', 'stim', 'stimChan', 'EOG1', 'EOG2', 'FCz', 'PO7', 'Cz', 'PO8', 'Pz', 'Oz']
 subs = ['strings with subject IDs']  # List of subject IDs
 task = 'alpha'
 frequency_range = (9, 12)
@@ -78,7 +77,7 @@ for sub in subs:
     # Concatenate file names
     file = f"{path}{sub}_performance_{task}.csv"
     # Read fiel to data frame
-    data = pd.read_csv(file, sep=',', names=columns, header=None)
+    data = pd.read_csv(file, sep=',')
 
     # Set the amplitude threshold for the subject
     threshold = info[(info['subject'] == int(sub)) & (info['task'] == task)]['threshold'].values[0]
@@ -152,7 +151,9 @@ for sub in subs:
 
     # Concatenate the path and the file
     file = f"{path}{sub}_performance_{task}.csv"
-      
+    # Read fiel to data frame
+    data = pd.read_csv(file, sep=',')
+  
     # Set the amplitude threshold for an individual subject
     threshold = info[(info['subject'] == int(sub)) & (info['task'] == task)]['threshold'].to_numpy()[0]
 
