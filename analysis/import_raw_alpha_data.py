@@ -11,6 +11,7 @@ frequency_range = (9, 12)
 info = pd.read_csv('pseudo_random_target.csv', sep=',', header=0)
 targets = ['ascending', 'descending', 'trough', 'peak']
 
+# RT-CL loop
 # Iterate over each subject
 for sub in subs:
   
@@ -153,4 +154,4 @@ for sub in subs:
     data.reset_index(drop=True, inplace=True)
 
     # Save processed data frame
-    data.to_csv('output_path/' + sub + '_performance_' + task + '.csv', index=False)
+    data.to_csv('output_path/' + sub + '_performance_' + task + '_fpga.csv', index=False)
