@@ -16,7 +16,7 @@ targets = ['ascending', 'descending', 'trough', 'peak']
 for sub in subs:
   
     # Create file name
-    file = f"{path}{task}_{sub}.lvm"
+    file = path + task + '_' + sub + '.lvm'
     # Read file as a data frame
     data = pd.read_csv(file, sep='\t', names=columns, header=None)
     
