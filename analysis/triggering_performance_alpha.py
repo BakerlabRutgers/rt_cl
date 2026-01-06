@@ -25,52 +25,6 @@ targets = ['ascending', 'descending', 'trough', 'peak']
 # Initialize an empty DataFrame to hold the results
 fpga_stats_df = pd.DataFrame(columns=['target', 'phase', 'phase_error', 'envelope', 'frequency', 'eyes', 'sensitivity', 'subject'])
 
-# Create the phase detection function
-def detect_phase_events(data, filtered_signal, envelope_col='envelope', target_labels=('peak', 'trough', 'ascending', 'descending'),
-                        threshold=1000):
-
-    signal = filtered_signal
-
-    # Compute the signal derivatives for peak/trough detection
-    d_signal = np.diff(signal, prepend=signal[0])
-    deriv_sign = np.sign(d_signal)
-    peak_locs = np.where((deriv_sign[:-1] > 0) & (deriv_sign[1:] < 0))[0]
-    trough_locs = np.where((deriv_sign[:-1] < 0) & (deriv_sign[1:] > 0))[0]
-
-    # Detect ascending and descending zero-crossings
-    sig_sign = np.sign(signal)
-    ascending_locs = np.where((sig_sign[:-1] < 0) & (sig_sign[1:] > 0))[0]
-    descending_locs = np.where((sig_sign[:-1] > 0) & (sig_sign[1:] < 0))[0]
-
-    event_map = {
-        'peak': peak_locs,
-        'trough': trough_locs,
-        'ascending': ascending_locs,
-        'descending': descending_locs,
-    }
-
-    def apply_filters(indices):
-        """Apply envelope and min_distance filters."""
-        if len(indices) == 0:
-            return indices
-        env_vals = data[envelope_col].iloc[indices].values
-        indices = indices[env_vals >= threshold]
-
-        return np.array(indices)
-
-    for label in target_labels:
-        hits = np.zeros(len(data), dtype=int)
-        if label in event_map:
-            locs = event_map[label]
-            valid = apply_filters(locs)
-            # Keep hits where the target label matches
-            matching_targets = data['target'].iloc[valid] == label
-            valid = valid[matching_targets.values]
-            hits[valid] = 1
-        data[f'{label}_hit'] = hits
-
-    return data
-
 # Loop through each subject to process their RT-CL data
 for sub in subs:
 
@@ -110,8 +64,34 @@ for sub in subs:
     data['phase_error'] = data.apply(lambda row: ((row['phase'] - target_angles[row['target']] + 180) % 360) - 180, axis=1)
 
     # Detect phase events
-    data = detect_phase_events(
-        data, filtered_signal_frequ, threshold=threshold)
+    signal = filteredSignal_frequ
+    d_signal = np.diff(signal, prepend=signal[0])
+    deriv_sign = np.sign(d_signal)
+    peak_locs = np.where((deriv_sign[:-1] > 0) & (deriv_sign[1:] < 0))[0]
+    trough_locs = np.where((deriv_sign[:-1] < 0) & (deriv_sign[1:] > 0))[0]
+
+    sig_sign = np.sign(signal)
+    ascending_locs = np.where((sig_sign[:-1] < 0) & (sig_sign[1:] > 0))[0]
+    descending_locs = np.where((sig_sign[:-1] > 0) & (sig_sign[1:] < 0))[0]
+
+    event_map = {'peak': peak_locs, 'trough': trough_locs,
+                 'ascending': ascending_locs, 'descending': descending_locs}
+
+    for label in ['peak', 'trough', 'ascending', 'descending']:
+        hits = np.zeros(len(data), dtype=int)
+        locs = event_map[label]
+        if len(locs) > 0:
+            env_ok = data['envelope'].iloc[locs].values >= threshold
+            valid = locs[env_ok]
+            # min_distance filter (0 in this example)
+            filtered = [valid[0]] if len(valid) > 0 else []
+            for idx in valid[1:]:
+                if idx - filtered[-1] >= 0:
+                    filtered.append(idx)
+            valid = np.array(filtered)
+            match = data['target'].iloc[valid] == label
+            hits[valid[match.values]] = 1
+        data[label+'_hit'] = hits
 
     # Create phaseStats DataFrame for stimulation timings
     phase_stats_mask = (data['stim'] == 1)
@@ -180,8 +160,34 @@ for sub in subs:
     data['phase_error'] = data.apply(lambda row: ((row['phase'] - target_angles[row['target']] + 180) % 360) - 180, axis=1)
 
     # Detect phase events
-    data = detect_phase_events(
-        data, filtered_signal_frequ, threshold=threshold)
+    signal = filteredSignal_frequ
+    d_signal = np.diff(signal, prepend=signal[0])
+    deriv_sign = np.sign(d_signal)
+    peak_locs = np.where((deriv_sign[:-1] > 0) & (deriv_sign[1:] < 0))[0]
+    trough_locs = np.where((deriv_sign[:-1] < 0) & (deriv_sign[1:] > 0))[0]
+
+    sig_sign = np.sign(signal)
+    ascending_locs = np.where((sig_sign[:-1] < 0) & (sig_sign[1:] > 0))[0]
+    descending_locs = np.where((sig_sign[:-1] > 0) & (sig_sign[1:] < 0))[0]
+
+    event_map = {'peak': peak_locs, 'trough': trough_locs,
+                 'ascending': ascending_locs, 'descending': descending_locs}
+
+    for label in ['peak', 'trough', 'ascending', 'descending']:
+        hits = np.zeros(len(data), dtype=int)
+        locs = event_map[label]
+        if len(locs) > 0:
+            env_ok = data['envelope'].iloc[locs].values >= threshold
+            valid = locs[env_ok]
+            # min_distance filter (0 in this example)
+            filtered = [valid[0]] if len(valid) > 0 else []
+            for idx in valid[1:]:
+                if idx - filtered[-1] >= 0:
+                    filtered.append(idx)
+            valid = np.array(filtered)
+            match = data['target'].iloc[valid] == label
+            hits[valid[match.values]] = 1
+        data[label+'_hit'] = hits
 
     # Create phaseStats DataFrame for stimulation timings
     phase_stats_mask = (data['stim'] == 1)
