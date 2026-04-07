@@ -39,7 +39,7 @@ for sub in subs:
     # Design bandpass filters for frequency and phase signals
     # Use a narrow higher order filter for the frequency estimation and a wider low order filter for the phase estimation
     Bfilter_frequ = butter(2, frequency_range, 'bandpass', fs=sfreq, output='sos')
-    Bfilter_phase = butter(1, [1, 20], 'bandpass', fs=sfreq, output='sos')
+    Bfilter_phase = butter(1, [frequency_range[0]-4, frequency_range[0]+4], 'bandpass', fs=sfreq, output='sos')
 
     # Apply filters to the data
     filtered_signal_frequ = sosfilt(Bfilter_frequ, data['signal'])
